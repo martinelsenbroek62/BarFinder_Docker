@@ -1,0 +1,74 @@
+diff --git a/bin/common/dnnclient-gpu.py b/bin/common/dnnclient-gpu.py
+index 147fe19..996fc74 100755
+--- a/bin/common/dnnclient-gpu.py
++++ b/bin/common/dnnclient-gpu.py
+@@ -164,6 +164,7 @@ def ff(x0_cpu):
+ adinserversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ adinserversock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+ adinserversock.bind((adinserver_host, adinserver_port))
++adinserversock.setblocking(1)
+ adinserversock.listen(1)
+ 
+ juliusclientsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+@@ -240,10 +241,17 @@ while True:
+         buf_splice_feature = None
+         fnum = 0
+ 
+-r_msg = struct.pack('=i', 0)
+-juliusclientsock.sendall(r_msg)
+-
+-r_msg = struct.pack('=i', -1)
+-juliusclientsock.sendall(r_msg)
+-
+-adinclientsock.close()
++    elif nbytes == -1:
++        # stop signal
++        break
++
++try:
++    r_msg = struct.pack('=i', 0)
++    juliusclientsock.sendall(r_msg)
++    
++    r_msg = struct.pack('=i', -1)
++    juliusclientsock.sendall(r_msg)
++except socket.error:
++    pass
++finally:
++    adinclientsock.close()
+diff --git a/bin/common/dnnclient.py b/bin/common/dnnclient.py
+index 783d1ff..97303dd 100755
+--- a/bin/common/dnnclient.py
++++ b/bin/common/dnnclient.py
+@@ -92,6 +92,7 @@ def ff(x0):
+ adinserversock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ adinserversock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+ adinserversock.bind((adinserver_host, adinserver_port))
++adinserversock.setblocking(1)
+ adinserversock.listen(1)
+ 
+ juliusclientsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+@@ -168,10 +169,17 @@ while True:
+         buf_splice_feature = None
+         fnum = 0
+ 
+-r_msg = struct.pack('=i', 0)
+-juliusclientsock.sendall(r_msg)
+-
+-r_msg = struct.pack('=i', -1)
+-juliusclientsock.sendall(r_msg)
+-
+-adinclientsock.close()
++    elif nbytes == -1:
++        # stop signal
++        break
++
++try:
++    r_msg = struct.pack('=i', 0)
++    juliusclientsock.sendall(r_msg)
++    
++    r_msg = struct.pack('=i', -1)
++    juliusclientsock.sendall(r_msg)
++except socket.error:
++    pass
++finally:
++    adinclientsock.close()

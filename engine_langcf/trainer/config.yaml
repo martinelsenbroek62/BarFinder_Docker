@@ -1,0 +1,26 @@
+train_data_dir: "/shared/spectrogram_data_huge/training.csv"
+validation_data_dir: "/shared/spectrogram_data_huge/validation.csv"
+test_data_dir: "/shared/spectrogram_data_huge/testing.csv"
+
+batch_size: 128
+learning_rate: 0.001
+num_epochs: 50
+
+data_loader: "ImageLoader"
+color_mode: "L"  # L = bw or RGB
+input_shape: [129, 500, 1]
+
+model: "topcoder_crnn" # _finetune"
+
+segment_length: 10  # number of seconds each spectogram represents
+pixel_per_second: 50
+
+label_names: ["EN", "CN"]
+num_classes: 2
+
+# label_names: ["EN", "DE", "FR", "ES", "CN", "RUS"]
+# num_classes: 6
+
+
+
+

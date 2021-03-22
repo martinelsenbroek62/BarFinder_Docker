@@ -1,0 +1,12 @@
+diff --git a/data_utils/speech.py b/data_utils/speech.py
+index 0cea887..e64109d 100644
+--- a/data_utils/speech.py
++++ b/data_utils/speech.py
+@@ -3,6 +3,7 @@ from __future__ import absolute_import
+ from __future__ import division
+ from __future__ import print_function
+ 
++import numpy as np
+ from data_utils.audio import AudioSegment
+ 
+ 

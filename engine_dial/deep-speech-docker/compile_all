@@ -1,0 +1,24 @@
+#! /bin/bash
+
+set -e
+
+mkdir /DecodeEngineClean
+mv /DecodeEngine/data_utils /DecodeEngineClean
+mv /DecodeEngine/model_utils /DecodeEngineClean
+mv /DecodeEngine/utils /DecodeEngineClean
+mkdir /DecodeEngineClean/decoders
+mv /DecodeEngine/decoders/{__init__,swig_wrapper}.py /DecodeEngineClean/decoders
+rm -rf /DecodeEngine
+mv /DecodeEngineClean /DecodeEngine
+cd /DecodeEngine
+find /_compile -name "patch*.diff" | while read patchfile; do
+  patch -p1 < $patchfile
+done
+python /_compile/compile.py build_ext --inplace
+find . -name "*.c" -o -name "*.py" | xargs rm
+for file in `find . -name "__init__.so"`; do
+    dir=$(dirname $file)
+    touch $dir/__init__.py
+done
+rm -rf /_compile
+rm -rf /DecodeEngine/build

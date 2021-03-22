@@ -1,0 +1,51 @@
+english:
+  users:
+    - # - VOAvideo
+      # - CBSNewsOnline
+      # - bbcnews
+      # - NBCNews
+      # - ESPN
+      # - FoxNewsChannel
+      # - JimmyKimmelLive
+      # - SaturdayNightLive
+    # - CNN
+  playlists:
+    - PLeskMkEaHJYd4GHgze5m8FmYsTuXjc3JX
+    - PLeskMkEaHJYfbhpb6GbPATlXshAlQofMY
+# german:
+#   users:
+#     - deutschewelle
+#     - euronewsde
+#     - N24de
+#   playlists:
+#     -
+# french:
+#   users:
+#     - france24
+#   playlists:
+#     -
+# spanish:
+#   users:
+#     - antena3noticias
+#     - rtve
+#   playlists:
+#     -
+# chinese:
+#   users:
+#     - zhongguohaogequ  ## CCTV
+#     - cctvch  ## CCTV International
+#     - ifengofficial
+#     - baijiajiangtanTV
+#     - ctnTVdrama
+#     - sohuofficial
+#     - VOAchina
+#   playlists:
+#     - PLZ3KDfChDAnAzdFYS33j9w0IpaC-nPzP4  ## 【郭德纲于谦】合集
+#     - PL0KCOeE28vca3Atk-eKT6t2BEbDayLM-c  ## 中国经典小品与相声
+# russian:
+#   users:
+#     - Russia24TV
+#     - rtrussian
+#   playlists:
+#     -
+
