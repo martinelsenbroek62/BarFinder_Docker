@@ -1,0 +1,4 @@
+export const usageStatConstants = {
+    FETCH_SUCCESS: 'USAGE_STAT_FETCH_SUCCESS',
+    FETCH_FAILURE: 'USAGE_STAT_FETCH_FAILURE'
+}

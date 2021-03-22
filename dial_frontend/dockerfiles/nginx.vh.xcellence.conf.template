@@ -1,0 +1,69 @@
+# vim: set ft=nginx:
+server {
+    listen       80;
+    server_name  !SERVER_NAME!;
+
+!TLS_CONFIGURATION!
+
+    root   /app/html;
+    index  index.html index.htm;
+
+    #charset koi8-r;
+    #access_log  /var/log/nginx/log/host.access.log  main;
+
+    rewrite "^/patients" /index.html;
+    rewrite "^/users" /index.html;
+    rewrite "^/positive-controls" /index.html;
+    rewrite "^/proficiency-samples" /index.html;
+    rewrite "^/quality-control-report" /index.html;
+
+    location = /index.html {}
+
+    #error_page  404              /404.html;
+
+    # redirect server error pages to the static page /50x.html
+    #
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+
+    # deprecated: use /api/access_token instead
+    location /access_token {
+        proxy_pass http://api:5000;
+        include /etc/nginx/xcellence_api_proxy.conf;
+    }
+
+    # deprecated: use /api/access_token instead
+    location /convert_audio {
+        proxy_pass http://api:5000;
+        include /etc/nginx/xcellence_api_proxy.conf;
+    }
+
+    # deprecated: use /api/access_token instead
+    location /task_subscription {
+        proxy_pass http://api:5000;
+        include /etc/nginx/xcellence_api_proxy.conf;
+    }
+
+    location /api {
+        proxy_pass http://api:5000;
+        proxy_set_header SCRIPT_NAME /api;
+        include /etc/nginx/xcellence_api_proxy.conf;
+    }
+
+    location /flower {
+        rewrite ^/flower/(.*)$ /$1 break;
+        proxy_pass http://flower:5555;
+        include /etc/nginx/xcellence_api_proxy.conf;
+        proxy_pass_request_headers on;
+        # proxy_set_header Authorization "";
+        # proxy_set_header X-Forwarded-User $remote_user;
+        # proxy_pass_header Authorization;
+    }
+
+    location / {
+        try_files $uri /index.html;
+    }
+
+}

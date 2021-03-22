@@ -1,0 +1,69 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
+        integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+<script>
+
+    class DialClient {
+
+        constructor(debug = false) {
+            this.debug = debug;
+        }
+
+        async login(
+            email, password,
+            httpHost = 'https://aws-cpu.xcellence.tech',
+            websocketHost = 'ws://aws-cpu.xcellence.tech:5001'
+        ) {
+            const resp = await fetch(`${httpHost}/access_token`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `email=${email}&password=${password}`
+            });
+            if (resp.status !== 200) {
+                console.error((await resp.json()).message);
+                return;
+            }
+            const {access_token: accessToken} = await resp.json();
+            this._client = io(websocketHost, {
+                transportOptions: {
+                    polling: {
+                        extraHeaders: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    }
+                }
+            });
+            if (this.debug) {
+                this.registerDebugOutputEvents();
+            }
+            return;
+        }
+
+        registerDebugOutputEvents() {
+            this._client.on("message", data => {
+                const {event, event_id, status, source_url, task_result, postprocess} = data;
+                if (task_result) {
+                    console.log(`${event} (${event_id} - ${status}): ${JSON.stringify(task_result)}`);
+                } else if (source_url) {
+                    console.log(`${event} (${event_id} - ${status}): \n - send RTP stream to ${source_url}`);
+                } else if (postprocess) {
+                    console.log(`${event} (${event_id} - ${status}): \n - check post process result at ${postprocess.task_url}`);
+                } else {
+                    console.log(`${event} (${event_id} - ${status})`);
+                }
+            });
+            this._client.on("error", data => console.warn(data));
+        }
+
+        liveStream(url, use_rtp, engine, language) {
+            this._client.emit('livestream', {url, use_rtp, engine, language});
+        }
+
+        disconnect() {
+            this._client.disconnect();
+        }
+
+    }
+</script>
