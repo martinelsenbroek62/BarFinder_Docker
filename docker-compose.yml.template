@@ -1,0 +1,91 @@
+version: "3"
+services:
+  api:
+    image: api_collection:latest
+    ports:
+      - "5000:5000"
+    environment: &sharedConf
+      - GUNICORN_LOGLEVEL=info
+      - DATABASE_URI=postgresql+psycopg2://postgres@pgdb:5432/postgres
+      - JWT_SECRET_KEY=!!!CHANGE_THIS_TO_A_SECRET_RANDOM_STRING!!!
+      - HOST_SHARED_DIR=${PWD}/shared
+      - ENGINE_XCEL1_DOCKER_IMAGE=engine_dial:latest-gpu
+      - ENGINE_XCEL2_DOCKER_IMAGE=engine_xcel2:latest
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_ZH=engine_xcel2:latest-mandarin
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_EN2=engine_xcel2:latest-tedlium
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_EN_US=engine_xcel2:latest-tedlium-en-us
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_EN_UK=engine_xcel2:latest-tedlium-en-uk
+      - ENGINE_XCEL3_DOCKER_IMAGE=engine_dial:latest-cpu
+      - ENGINE_XCEL4_DOCKER_IMAGE=engine_xcel2:latest
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_ZH=engine_xcel2:latest-mandarin
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_EN2=engine_xcel2:latest-tedlium
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_EN_US=engine_xcel2:latest-tedlium-en-us
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_EN_UK=engine_xcel2:latest-tedlium-en-uk
+      - ENGINE_XCEL5_DOCKER_IMAGE_LANG_JA=engine_julius:latest-ja
+      - ENGINE_XCEL6_DOCKER_IMAGE_LANG_JA=engine_julius:latest-ja
+      - ENGINE_DIARIZATION_DOCKER_IMAGE=engine_diarization:latest
+      - ENGINE_DIAL_HOST_MODELS_DIR=${PWD}/engine_dial/payload/models
+      - ENGINE_DIAL_TRAINER_COUNT=2
+      - CELERY_CONCURRENCY=4
+      - AUTOREMOVE_CONTAINERS=True
+      - FLOWER_BASIC_AUTH=xceladm:xceladm2019!9
+      - RTP_PORT_RANGE=45000-46000
+    command: ["app"]
+    depends_on:
+      - pgdb
+      - redis
+      - rabbitmq
+  frontend:
+    image: dial_frontend:latest
+    ports:
+      - "80:80"
+    environment:
+      - SERVER_NAME=localhost
+    volumes:
+      - "${PWD}/access-logs:/app/logs"
+    depends_on:
+      - api
+      - flower
+  celery:
+    image: api_collection:latest
+    volumes:
+      - "${PWD}/shared:/shared"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment: *sharedConf
+    command: ["celery"]
+    depends_on:
+      - pgdb
+      - redis
+      - rabbitmq
+  socketio:
+    image: api_collection:latest
+    ports:
+      - "5001:5001"
+      - "45000-46000:45000-46000/udp"
+    volumes:
+      - "${PWD}/shared:/shared"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment: *sharedConf
+    tty: true
+    command: ["socketio"]
+    depends_on:
+      - pgdb
+      - redis
+      - rabbitmq
+  flower:
+    image: api_collection:latest
+    environment: *sharedConf
+    ports:
+      - "5555:5555"
+    command: ["flower"]
+    depends_on:
+      - redis
+      - rabbitmq
+  rabbitmq:
+    image: rabbitmq:3-management
+  redis:
+    image: redis:5
+  pgdb:
+    image: postgres:11
+    volumes:
+      - "${PWD}/pgdata/pgdata:/var/lib/postgresql/data"

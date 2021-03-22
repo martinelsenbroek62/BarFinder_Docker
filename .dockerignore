@@ -1,0 +1,10 @@
+./local
+./engine_dial_volume
+./pgdata
+./engine_dial
+./engine_kaldi
+./engine_langcf
+./engine_langcf2
+./shared
+.git
+./deployment

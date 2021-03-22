@@ -1,0 +1,7 @@
+#! /bin/bash
+
+set -e
+
+cd /app
+python /_compile/compile.py build_ext
+cp -r /app/api_collection/migrations /app/build/lib.linux-x86_64-3.7/api_collection
