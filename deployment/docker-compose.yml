@@ -1,0 +1,93 @@
+version: "3"
+services:
+  api:
+    image: 055985172228.dkr.ecr.us-west-2.amazonaws.com/api_collection:latest
+    ports:
+      - "5000:5000"
+    environment: &sharedConf
+      - GUNICORN_LOGLEVEL=info
+      - DATABASE_URI=postgresql+psycopg2://postgres@pgdb:5432/postgres
+      - JWT_SECRET_KEY=lSJmertOzgKo2vkll6bDMCPl2d/34vJN3AWaJGzu
+      - HOST_SHARED_DIR=${PWD}/shared
+      - ENGINE_XCEL1_DOCKER_IMAGE=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_dial:latest-gpu
+      - ENGINE_XCEL2_DOCKER_IMAGE=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_ZH=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-mandarin
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_EN2=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-tedlium
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_EN_US=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-tedlium-en-us
+      - ENGINE_XCEL2_DOCKER_IMAGE_LANG_EN_UK=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-tedlium-en-uk
+      - ENGINE_XCEL3_DOCKER_IMAGE=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_dial:latest-cpu
+      - ENGINE_XCEL4_DOCKER_IMAGE=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_ZH=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-mandarin
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_EN2=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-tedlium
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_EN_US=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-tedlium-en-us
+      - ENGINE_XCEL4_DOCKER_IMAGE_LANG_EN_UK=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_xcel2:latest-tedlium-en-uk
+      - ENGINE_XCEL5_DOCKER_IMAGE_LANG_JA=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_julius:latest-ja
+      - ENGINE_XCEL6_DOCKER_IMAGE_LANG_JA=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_julius:latest-ja
+      - ENGINE_DIARIZATION_DOCKER_IMAGE=055985172228.dkr.ecr.us-west-2.amazonaws.com/engine_diarization:latest
+      - ENGINE_DIAL_HOST_MODELS_DIR=${PWD}/engine_dial/payload/models
+      - ENGINE_DIAL_TRAINER_COUNT=1
+      - CELERY_CONCURRENCY=2
+      - AUTOREMOVE_CONTAINERS=True
+      - DEFAULT_ITERATION_TIMEOUT=600
+      - FLOWER_BASIC_AUTH=xceladm:xceladm2019!9
+      - RTP_PORT_RANGE=45000-46000
+    command: ["app"]
+    depends_on:
+      - pgdb
+      - redis
+      - rabbitmq
+  frontend:
+    image: 055985172228.dkr.ecr.us-west-2.amazonaws.com/dial_frontend:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SERVER_NAME=localhost
+    volumes:
+      - "${PWD}/certs:/etc/nginx/certs"
+      - "${PWD}/access-logs:/app/logs"
+    depends_on:
+      - api
+      - flower
+  celery:
+    image: 055985172228.dkr.ecr.us-west-2.amazonaws.com/api_collection:latest
+    volumes:
+      - "${PWD}/shared:/shared"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment: *sharedConf
+    command: ["celery"]
+    depends_on:
+      - pgdb
+      - redis
+      - rabbitmq
+  socketio:
+    image: 055985172228.dkr.ecr.us-west-2.amazonaws.com/api_collection:latest
+    ports:
+      - "5001:5001"
+      - "45000-46000:45000-46000/udp"
+    volumes:
+      - "${PWD}/shared:/shared"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment: *sharedConf
+    tty: true
+    command: ["socketio"]
+    depends_on:
+      - pgdb
+      - rabbitmq
+  flower:
+    image: 055985172228.dkr.ecr.us-west-2.amazonaws.com/api_collection:latest
+    environment: *sharedConf
+    ports:
+      - "5555:5555"
+    command: ["flower"]
+    depends_on:
+      - redis
+      - rabbitmq
+  rabbitmq:
+    image: rabbitmq:3-management
+  redis:
+    image: redis:5
+  pgdb:
+    image: postgres:11
+    volumes:
+      - "${PWD}/pgdata:/var/lib/postgresql/data"
